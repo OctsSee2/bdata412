@@ -135,6 +135,24 @@ ui <- fluidPage(
         label = "Choose an Industry Classification Type",
         choices = c("N/A" = "NA", get_vec_industry_classes())
       ),
+      selectInput(
+        inputId = "ownership_type_choice",
+        label = "Choose an Ownership Type",
+        choice = c(
+          "N/A" = "NA",
+          "Federal Gov." = 1,
+          "State Gov." = 2,
+          "Local Gov." = 3,
+          "Federal, State, & Local Gov." = 123,
+          "Private, State, & Local Gov." = 235,
+          "Private & Local Gov." = 35,
+          "Private" = 5,
+          "Private, Local Gov. Gambling Establishments, & Local Gov. Casino Hotels" = 57,
+          "Private, State, Local Gov. Hospitals" = 58,
+          "Private & Postal Service" = 59,
+          "Federal, State, & Local Gov. + Private Sector" = 1235
+        )
+      ),
       sliderInput(
         inputId = "bins",
         label = "Number of bins:",
@@ -192,7 +210,8 @@ server <- function(input, output) {
         AREA_TYPE = input$area_type_choice,
         PRIM_STATE = input$primary_state_choice,
         NAICS = input$industry_choice,
-        I_GROUP = input$industry_classification_choice
+        I_GROUP = input$industry_classification_choice,
+        OWN_CODE = input$ownership_type_choice
       ))
     return(clean_column_data(filtered_data, input$column_choice))
   })
