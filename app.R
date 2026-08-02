@@ -52,7 +52,8 @@ server <- function(input, output) {
   output$the_histogram_thing <- renderPlot({
     target_column_str <- input$choice_var
     selected_data <- employment_data[[target_column_str]]
-    numeric_data <- as.numeric(selected_data)
+    comma_removed_data <- gsub(",", "", selected_data)
+    numeric_data <- as.numeric(comma_removed_data)
     cleaned_numeric_data <- numeric_data[!is.na(numeric_data)]
     
     validate(
