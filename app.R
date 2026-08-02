@@ -15,6 +15,10 @@ get_named_vec_naics_names <- function () {
   return(setNames(unique_naics$NAICS, unique_naics$NAICS_TITLE))
 }
 
+get_vec_industry_classes <- function () {
+  return(as.character(unique(employment_data$I_GROUP)))
+}
+
 ui <- fluidPage(
   titlePanel("Testing testing"),
   sidebarLayout(
@@ -126,6 +130,11 @@ ui <- fluidPage(
         label = "Choose an Industry",
         choices = c("N/A" = "NA", get_named_vec_naics_names())
       ),
+      selectInput(
+        inputId = "industry_classification_choice",
+        label = "Choose an Industry Classification Type",
+        choices = c("N/A" = "NA", get_vec_industry_classes())
+      ),
       sliderInput(
         inputId = "bins",
         label = "Number of bins:",
@@ -182,7 +191,8 @@ server <- function(input, output) {
         AREA = input$area_choice,
         AREA_TYPE = input$area_type_choice,
         PRIM_STATE = input$primary_state_choice,
-        NAICS = input$industry_choice
+        NAICS = input$industry_choice,
+        I_GROUP = input$industry_classification_choice
       ))
     return(clean_column_data(filtered_data, input$column_choice))
   })
