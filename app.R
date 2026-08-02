@@ -56,6 +56,66 @@ ui <- fluidPage(
           "Non-metro areas" = 5
         )
       ),
+      selectInput(
+        inputId = "primary_state_choice",
+        label = "Choose a Primary State",
+        choices = c(
+          "N/A" = "NA",
+          "Entire US" = "US",
+          "Alabama" = "AL",
+          "Alaska" = "AK",
+          "Arizona" = "AZ",
+          "Arkansas" = "AR",
+          "California" = "CA",
+          "Colorado" = "CO",
+          "Connecticut" = "CT",
+          "Delaware" = "DE",
+          "D.C." = "DC",
+          "Florida" = "FL",
+          "Georgia" = "GA",
+            "Guam" = "GU",
+          "Hawaii" = "HI",
+          "Idaho" = "ID",
+          "Illinois" = "IL",
+          "Iowa" = "IA",
+          "Kansas" = "KA",
+          "Kentucky" = "KY",
+          "Louisiana" = "LA",
+          "Maine" = "ME",
+          "Maryland" = "MD",
+          "Massachusetts" = "MA",
+          "Michigan" = "MI",
+          "Minnesota" = "MN",
+          "Mississippi" = "MS",
+          "Missouri" = "MO",
+          "Montana" = "MT",
+          "Nebraska" = "NE",
+          "Nevada" = "NV",
+          "New Hampshire" = "NH",
+          "New Jersey" = "NJ",
+          "New Mexico" = "NM",
+          "New York" = "NY",
+          "North Carolina" = "NC",
+          "North Dakota" = "ND",
+          "Ohio" = "OH",
+          "Oklahoma" = "OK",
+          "Oregon" = "OR",
+          "Pennsylvania" = "PA",
+          "Puerto Rico" = "PR",
+          "Rhode Island" = "RI",
+          "South Carolina" = "SC",
+          "Tennessee" = "TN",
+          "Texas" = "TX",
+          "Utah" = "UT",
+          "Vermont" = "VT",
+          "Virginia" = "VA",
+          "Virgin Islands" = "VI",
+          "Washington" = "WA",
+          "West Virginia" = "WV",
+          "Wisconsin" = "WI",
+          "Wyoming" = "WY"
+        )
+      ),
       sliderInput(
         inputId = "bins",
         label = "Number of bins:",
@@ -110,7 +170,8 @@ server <- function(input, output) {
       employment_data,
       list(
         AREA = input$area_choice,
-        AREA_TYPE = input$area_type_choice
+        AREA_TYPE = input$area_type_choice,
+        PRIM_STATE = input$primary_state_choice
       ))
     return(clean_column_data(filtered_data, input$column_choice))
   })
