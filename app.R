@@ -19,6 +19,11 @@ get_vec_industry_classes <- function () {
   return(as.character(unique(employment_data$I_GROUP)))
 }
 
+get_named_vec_occupation_names <- function () {
+  unique_occupations <- unique(employment_data[, c("OCC_TITLE", "OCC_CODE")])
+  return(setNames(unique_occupations$OCC_CODE, unique_occupations$OCC_TITLE))
+}
+
 ui <- fluidPage(
   titlePanel("Testing testing"),
   sidebarLayout(
@@ -153,6 +158,11 @@ ui <- fluidPage(
           "Federal, State, & Local Gov. + Private Sector" = 1235
         )
       ),
+      selectInput(
+        inputId = "occupation_type_choice",
+        label = "Choose an Occupation Type",
+        choice = c("N/A" = "NA", get_named_vec_occupation_names())
+      ),
       sliderInput(
         inputId = "bins",
         label = "Number of bins:",
@@ -211,7 +221,8 @@ server <- function(input, output) {
         PRIM_STATE = input$primary_state_choice,
         NAICS = input$industry_choice,
         I_GROUP = input$industry_classification_choice,
-        OWN_CODE = input$ownership_type_choice
+        OWN_CODE = input$ownership_type_choice,
+        OCC_CODE = input$occupation_type_choice
       ))
     return(clean_column_data(filtered_data, input$column_choice))
   })
