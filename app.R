@@ -10,6 +10,11 @@ get_named_vec_area_names <- function() {
   return(setNames(unique_areas$AREA, unique_areas$AREA_TITLE))
 }
 
+get_named_vec_naics_names <- function () {
+  unique_naics <- unique(employment_data[, c("NAICS_TITLE", "NAICS")])
+  return(setNames(unique_naics$NAICS, unique_naics$NAICS_TITLE))
+}
+
 ui <- fluidPage(
   titlePanel("Testing testing"),
   sidebarLayout(
@@ -116,6 +121,11 @@ ui <- fluidPage(
           "Wyoming" = "WY"
         )
       ),
+      selectInput(
+        inputId = "industry_choice",
+        label = "Choose an Industry",
+        choices = c("N/A" = "NA", get_named_vec_naics_names())
+      ),
       sliderInput(
         inputId = "bins",
         label = "Number of bins:",
@@ -171,7 +181,8 @@ server <- function(input, output) {
       list(
         AREA = input$area_choice,
         AREA_TYPE = input$area_type_choice,
-        PRIM_STATE = input$primary_state_choice
+        PRIM_STATE = input$primary_state_choice,
+        NAICS = input$industry_choice
       ))
     return(clean_column_data(filtered_data, input$column_choice))
   })
