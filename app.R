@@ -1,5 +1,6 @@
 library(shiny)
 library(ggplot2)
+library(dplyr)
 
 # some stuff to load the data from 2024-2025 (testing)
 employment_data <- read.csv("./all_data_M_2025.csv")
@@ -43,6 +44,18 @@ ui <- fluidPage(
         label = "Choose an Area",
         choices = c("N/A" = "NA", get_named_vec_area_names())
       ),
+      selectInput(
+        inputId = "area_type_choice",
+        label = "Choose an Area Type",
+        choices = c(
+          "N/A" = "NA",
+          "Entire US" = 1,
+          "States" = 2,
+          "US Territories" = 3,
+          "Metro areas" = 4,
+          "Non-metro areas" = 5
+        )
+      ),
       sliderInput(
         inputId = "bins",
         label = "Number of bins:",
@@ -72,11 +85,18 @@ ui <- fluidPage(
   )
 )
 
-clean_filter_column_data <- function(df_in, column_str_in, 
-                                     area_filter_in) {
-  if (area_filter_in != "NA") {
-    df_in <- df_in[df_in$AREA == area_filter_in, , drop = FALSE]
+apply_multi_filter_data <- function (df_in, conds_in) {
+  for (col_in in names(conds_in)) {
+    val_in <- conds_in[[col_in]]
+    if (val_in != "NA") {
+      df_in <- df_in %>% filter(.data[[col_in]] == val_in)
+    }
   }
+  return(df_in)
+}
+
+
+clean_column_data <- function(df_in, column_str_in) {
   selected_data <- df_in[[column_str_in]]
   comma_removed_data <- gsub(",", "", selected_data)
   numeric_data <- as.numeric(comma_removed_data)
@@ -86,8 +106,13 @@ clean_filter_column_data <- function(df_in, column_str_in,
 
 server <- function(input, output) {
   get_cleaned_numeric_data <- reactive({
-    clean_filter_column_data(employment_data, input$column_choice,
-                             input$area_choice)
+    filtered_data <- apply_multi_filter_data(
+      employment_data,
+      list(
+        AREA = input$area_choice,
+        AREA_TYPE = input$area_type_choice
+      ))
+    return(clean_column_data(filtered_data, input$column_choice))
   })
   
   output$the_histogram_thing <- renderPlot({
