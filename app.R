@@ -163,6 +163,11 @@ ui <- fluidPage(
         label = "Choose an Occupation Type",
         choice = c("N/A" = "NA", get_named_vec_occupation_names())
       ),
+      selectInput(
+        inputId = "occupation_specific_level_choice",
+        label = "Choose an Occupation Specificity Level",
+        choices = c("N/A" = "NA", "D"="detailed", "M_"="minor", "M"="major", "B"="broad")
+      ),
       sliderInput(
         inputId = "bins",
         label = "Number of bins:",
@@ -222,7 +227,8 @@ server <- function(input, output) {
         NAICS = input$industry_choice,
         I_GROUP = input$industry_classification_choice,
         OWN_CODE = input$ownership_type_choice,
-        OCC_CODE = input$occupation_type_choice
+        OCC_CODE = input$occupation_type_choice,
+        O_GROUP = input$occupation_specific_level_choice
       ))
     return(clean_column_data(filtered_data, input$column_choice))
   })
