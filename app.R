@@ -12,37 +12,25 @@ ui <- fluidPage(
         inputId = "choice_var",
         label = "Choose a column",
         choices = c(
-          "Area" = "AREA",
-          "Area title" = "AREA_TITLE",
-          "Area type" = "AREA_TYPE",
-          "Primary state" = "PRIM_STATE",
-          "NAICS code" = "NAICS",
-          "NAICS title" = "NAICS_TITLE",
-          "something" = "I_GROUP",
-          "something else" = "OWN_CODE",
-          "another thing" = "OCC_CODE",
-          "what" = "O_GROUP",
-          "Total employment" = "TOT_EMP",
-          "????" = "EMP_PRSE",
-          "numbers" = "JOBS_1000",
-          "words" = "LOC_QUOTIENT",
-          "idk" = "PCT_TOTAL",
-          "idk either" = "PCT_RPT",
-          "so mean" = "H_MEAN",
-          "also mean" = "A_MEAN",
-          "still mean" = "MEAN_PRSE",
-          "numbers & words" = "H_PCT10",
-          "numbers & bigger words" = "H_PCT25",
-          "the middle" = "H_MEDIAN",
-          "numbers & even bigger words" = "H_PCT75",
-          "number & biggest word" = "H_PCT90",
-          "something another" = "A_PCT10",
-          "something another (bigger)" = "A_PCT25",
-          "something in the middle" = "A_MEDIAN",
-          "something another (even bigger)" = "A_PCT75",
-          "something another (biggest)" = "A_PCT90",
-          "annual ?" = "ANNUAL",
-          "hourly ?" = "HOURLY"
+          "Job total employment count" = "TOT_EMP",
+          "Job employment PRSE" = "EMP_PRSE",
+          "Jobs out of 1000" = "JOBS_1000",
+          "Job common-ness value" = "LOC_QUOTIENT",
+          "Job employment percentage from industry total" = "PCT_TOTAL",
+          "Job business location percentage from industry" = "PCT_RPT",
+          "Mean hourly wage" = "H_MEAN",
+          "Mean annual wage" = "A_MEAN",
+          "Mean wage PRSE" = "MEAN_PRSE",
+          "Hourly wage 10th percentile" = "H_PCT10",
+          "Hourly wage 25th percentile" = "H_PCT25",
+          "Hourly wage median" = "H_MEDIAN",
+          "Hourly wage 75th percentile" = "H_PCT75",
+          "Hourly wage 90th percentile" = "H_PCT90",
+          "Annual wage 10th percentile" = "A_PCT10",
+          "Annual wage 25th percentile" = "A_PCT25",
+          "Annual wage median" = "A_MEDIAN",
+          "Annual wage 75th percentile" = "A_PCT75",
+          "Annual wage 90th percentile" = "A_PCT90"
         )
       ),
       sliderInput(
@@ -61,12 +49,26 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   output$the_histogram_thing <- renderPlot({
-    selected_data <- employment_data[[input$choice_var]]
+    target_column_str <- input$choice_var
+    selected_data <- employment_data[[target_column_str]]
+    numeric_data <- as.numeric(selected_data)
+    cleaned_numeric_data <- numeric_data[!is.na(numeric_data)]
     
-    ggplot(employment_data, aes_string(x = input$choice_var)) +
+    validate(
+      need(length(cleaned_numeric_data) > 0,
+           "There is no (valid) numeric data for this column !")
+    )
+    
+    new_employment_data_df <- data.frame(the_value = cleaned_numeric_data)
+    
+    ggplot(new_employment_data_df, aes(x = the_value)) +
       geom_histogram(bins = input$bins,
                      fill = "red", color = "black") +
-      labs(title = paste("A graph for `", input$choice_var, "`")) +
+      labs(
+        title = paste("A graph for `", target_column_str, "`"),
+        x = target_column_str,
+        y = "Count"
+      ) +
       theme_minimal()
   })
 }
