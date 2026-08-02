@@ -30,7 +30,7 @@ ui <- fluidPage(
     sidebarPanel(
       selectInput(
         inputId = "column_choice",
-        label = "Choose a column",
+        label = "Choose a value column to graph",
         choices = c(
           "Job total employment count" = "TOT_EMP",
           "Job employment PRSE" = "EMP_PRSE",
