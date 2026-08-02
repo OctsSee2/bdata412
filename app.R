@@ -29,7 +29,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       selectInput(
-        inputId = "column_choice",
+        inputId = "val_column_choice",
         label = "Choose a value column to graph",
         choices = c(
           "Job total employment count" = "TOT_EMP",
@@ -166,7 +166,7 @@ ui <- fluidPage(
       selectInput(
         inputId = "occupation_specific_level_choice",
         label = "Choose an Occupation Specificity Level",
-        choices = c("N/A" = "NA", "D"="detailed", "M_"="minor", "M"="major", "B"="broad")
+        choices = c("N/A" = "NA", "detailed", "minor", "major", "broad")
       ),
       sliderInput(
         inputId = "bins",
@@ -230,11 +230,11 @@ server <- function(input, output) {
         OCC_CODE = input$occupation_type_choice,
         O_GROUP = input$occupation_specific_level_choice
       ))
-    return(clean_column_data(filtered_data, input$column_choice))
+    return(clean_column_data(filtered_data, input$val_column_choice))
   })
   
   output$the_histogram_thing <- renderPlot({
-    target_column_str <- input$column_choice
+    target_column_str <- input$val_column_choice
     cleaned_numeric_data <- get_cleaned_numeric_data()
     
     validate(
@@ -257,7 +257,7 @@ server <- function(input, output) {
   
   output$the_debug_table <- renderTable({
     head_n <- 10
-    target_column_str <- input$column_choice
+    target_column_str <- input$val_column_choice
     selected_data <- employment_data[[target_column_str]]
     
     data.frame(
@@ -267,7 +267,7 @@ server <- function(input, output) {
   })
   
   output$the_stat_summary <- renderPrint({
-    target_column_str <- input$column_choice
+    target_column_str <- input$val_column_choice
     cleaned_numeric_data <- get_cleaned_numeric_data()
 
     print_width <- 15
