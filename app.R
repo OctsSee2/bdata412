@@ -66,6 +66,31 @@ industry_choices <- sort(unique(oews$naics_title))
 ogroup_choices   <- sort(unique(oews$o_group))
 owncode_choices  <- sort(unique(oews$own_code))
 
+# Ownership type: map raw codes to human-readable labels
+own_labels <- c(
+  "1"    = "Federal Government",
+  "2"    = "State Government",
+  "3"    = "Local Government",
+  "5"    = "Private",
+  "123"  = "Federal, State, and Local Government",
+  "235"  = "Private, State, and Local Government",
+  "35"   = "Private and Local Government",
+  "57"   = "Private, Local Govt. Gambling (NAICS 71) & Casino Hotels (NAICS 72)",
+  "58"   = "Private plus State and Local Government Hospitals",
+  "59"   = "Private and Postal Service",
+  "1235" = "Federal, State, Local Government, and Private Sector (All Ownerships)"
+)
+
+owncode_present <- sort(unique(as.character(oews$own_code)))
+# Falls back to the raw code itself if a code isn't in the lookup above.
+owncode_choices <- setNames(
+  owncode_present,
+  ifelse(owncode_present %in% names(own_labels),
+         own_labels[owncode_present],
+         owncode_present)
+)
+
+
 
 # ---------------------------------------------------------------------------
 # 2. UI
@@ -252,15 +277,19 @@ server <- function(input, output, session) {
   
   # --- Data table ------------------------------------------------------------
   output$dataTable <- renderDT({
-    d <- filtered_data()
+    d <- filtered_data() %>%
+      mutate(own_label = ifelse(as.character(own_code) %in% names(own_labels),
+                                own_labels[as.character(own_code)],
+                                as.character(own_code)))
+    
     datatable(
-      d %>% select(area_title, naics_title, occ_title, o_group, own_code,
+      d %>% select(area_title, naics_title, occ_title, o_group,
+                   ownership = own_label,
                    tot_emp, h_mean, a_mean, a_median),
       options = list(pageLength = 15, scrollX = TRUE)
     )
   })
 }
-
 # ---------------------------------------------------------------------------
 # 4. RUN
 # ---------------------------------------------------------------------------
