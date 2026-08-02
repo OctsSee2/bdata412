@@ -4,12 +4,17 @@ library(ggplot2)
 # some stuff to load the data from 2024-2025 (testing)
 employment_data <- read.csv("./all_data_M_2025.csv")
 
+get_named_vec_area_names <- function() {
+  unique_areas <- unique(employment_data[, c("AREA_TITLE", "AREA")])
+  return(setNames(unique_areas$AREA, unique_areas$AREA_TITLE))
+}
+
 ui <- fluidPage(
   titlePanel("Testing testing"),
   sidebarLayout(
     sidebarPanel(
       selectInput(
-        inputId = "choice_var",
+        inputId = "column_choice",
         label = "Choose a column",
         choices = c(
           "Job total employment count" = "TOT_EMP",
@@ -32,6 +37,72 @@ ui <- fluidPage(
           "Annual wage 75th percentile" = "A_PCT75",
           "Annual wage 90th percentile" = "A_PCT90"
         )
+      ),
+      selectInput(
+        inputId = "area_choice",
+        label = "Choose an Area",
+        choices = get_named_vec_area_names()
+        #choices = c(
+        #  "N/A" = "NA",
+        #  "Entire US" = 99,
+        #  "Alabama" = 01,
+        #  "Alaska" = 02,
+        #  "Arizona" = 04,
+        #  "Arkansas" = 05,
+        #  "California" = 06,
+        #  "Colorado" = 08,
+        #  "Connecticut" = 09,
+        #  "Delaware" = 10,
+        #  "D.C." = 11,
+        #  "Florida" = 12,
+        #  "Georgia" = 13,
+        #  "Hawaii" = 15,
+        #  "Idaho" = 16,
+        #  "Illinois"= 17,
+        #  "Indiana" = 18,
+        #  "Iowa" = 19,
+        #  "Kansas" = 20,
+        #  "Kentucky" = 21,
+        #  "Lousiana" = 22,
+        #  "Maine" = 23,
+        #  "Maryland" = 24,
+        #  "Massachusetts" = 25,
+        #  "Michigan" = 26,
+        #  "Minnesota" = 27,
+        #  "Mississippi" = 28,
+        #  "Missouri" = 29,
+        #  "Montana" = 30,
+        #  "Nebraska" = 31,
+        #  "Nevada" = 32,
+        #  "New Hampshire" = 33,
+        #  "New Jersey" = 34,
+        #  "New Mexico" = 35,
+        #  "New York" = 36,
+        #  "North Carolina" = 37,
+        #  "North Dakota" = 38,
+        #  "Ohio" = 39,
+        #  "Oklahoma" = 40,
+        #  "Oregon" = 41,
+        #  "Pennsylvania" = 42,
+        #  "Rhode Island" = 44,
+        #  "South Carolina" = 45,
+        #  "South Dakota" = 46,
+        #  "Tennessee" = 47,
+        #  "Texas" = 48,
+        #  "Utah" = 49,
+        #  "Vermont" = 50,
+        #  "Virginia" = 51,
+        #  "Washington" = 53,
+        #  "West Virginia" = 54,
+        #  "Wisconsin" = 55,
+        #  "Wyoming" = 56,
+        #  "American Samoa" = 60,
+        #  "Guam" = 66,
+        #  "North Mariana Islands" = 69,
+        #  "Puerto Rico" = 72,
+        #  "US Minor Outlying Islands" = 74,
+        #  "US Virgin Islands" = 78
+        #)
       ),
       sliderInput(
         inputId = "bins",
@@ -62,8 +133,12 @@ ui <- fluidPage(
   )
 )
 
-clean_column_data <- function(df_in, column_str_in) {
-  selected_data <- employment_data[[column_str_in]]
+clean_filter_column_data <- function(df_in, column_str_in, 
+                                     area_filter_in) {
+  if (area_filter_in != "NA") {
+    df_in <- df_in[df_in$AREA == area_filter_in, , drop = FALSE]
+  }
+  selected_data <- df_in[[column_str_in]]
   comma_removed_data <- gsub(",", "", selected_data)
   numeric_data <- as.numeric(comma_removed_data)
   
@@ -72,11 +147,12 @@ clean_column_data <- function(df_in, column_str_in) {
 
 server <- function(input, output) {
   get_cleaned_numeric_data <- reactive({
-    clean_column_data(employment_data, input$choice_var)
+    clean_filter_column_data(employment_data, input$column_choice,
+                             input$area_choice)
   })
   
   output$the_histogram_thing <- renderPlot({
-    target_column_str <- input$choice_var
+    target_column_str <- input$column_choice
     cleaned_numeric_data <- get_cleaned_numeric_data()
     
     validate(
@@ -99,7 +175,7 @@ server <- function(input, output) {
   
   output$the_debug_table <- renderTable({
     head_n <- 10
-    target_column_str <- input$choice_var
+    target_column_str <- input$column_choice
     selected_data <- employment_data[[target_column_str]]
     
     data.frame(
@@ -109,7 +185,7 @@ server <- function(input, output) {
   })
   
   output$the_stat_summary <- renderPrint({
-    target_column_str <- input$choice_var
+    target_column_str <- input$column_choice
     cleaned_numeric_data <- get_cleaned_numeric_data()
 
     print_width <- 15
