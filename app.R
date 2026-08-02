@@ -42,19 +42,42 @@ ui <- fluidPage(
       )
     ),
     mainPanel(
-      plotOutput(outputId = "the_histogram_thing"),
-      tableOutput(outputId = "the_debug_table")
+      fluidRow(
+        column(
+          12,
+          plotOutput(outputId = "the_histogram_thing")
+        )
+      ),
+      fluidRow(
+        column(
+          6,
+          tableOutput(outputId = "the_debug_table")
+        ),
+        column(
+          6,
+          verbatimTextOutput("the_stat_summary")
+        )
+      )
     )
   )
 )
 
+clean_column_data <- function(df_in, column_str_in) {
+  selected_data <- employment_data[[column_str_in]]
+  comma_removed_data <- gsub(",", "", selected_data)
+  numeric_data <- as.numeric(comma_removed_data)
+  
+  return(numeric_data[!is.na(numeric_data)])
+}
+
 server <- function(input, output) {
+  get_cleaned_numeric_data <- reactive({
+    clean_column_data(employment_data, input$choice_var)
+  })
+  
   output$the_histogram_thing <- renderPlot({
     target_column_str <- input$choice_var
-    selected_data <- employment_data[[target_column_str]]
-    comma_removed_data <- gsub(",", "", selected_data)
-    numeric_data <- as.numeric(comma_removed_data)
-    cleaned_numeric_data <- numeric_data[!is.na(numeric_data)]
+    cleaned_numeric_data <- get_cleaned_numeric_data()
     
     validate(
       need(length(cleaned_numeric_data) > 0,
@@ -83,6 +106,31 @@ server <- function(input, output) {
       Row_Index = 1:head_n,
       Raw_Value = head(selected_data, n = head_n)
     )
+  })
+  
+  output$the_stat_summary <- renderPrint({
+    target_column_str <- input$choice_var
+    cleaned_numeric_data <- get_cleaned_numeric_data()
+
+    print_width <- 15
+    data_count <- length(cleaned_numeric_data)
+    data_mean <- mean(cleaned_numeric_data)
+    data_median <- median(cleaned_numeric_data)
+    data_max <- max(cleaned_numeric_data)
+    data_min <- min(cleaned_numeric_data)
+    data_q25 <- quantile(cleaned_numeric_data, 0.25)
+    data_q75 <- quantile(cleaned_numeric_data, 0.75)
+    
+    int_format_str <- sprintf("%%-%ds %%d\n", print_width)
+    dbl_format_str <- sprintf("%%-%ds %%.2f\n", print_width)
+    
+    cat(sprintf(int_format_str, "Count:", data_count))
+    cat(sprintf(dbl_format_str, "Min:", data_min))
+    cat(sprintf(dbl_format_str, "Q1. (25%):", data_q25))
+    cat(sprintf(dbl_format_str, "Median:", data_median))
+    cat(sprintf(dbl_format_str, "Mean:", data_mean))
+    cat(sprintf(dbl_format_str, "Q3. (75%):", data_q75))
+    cat(sprintf(dbl_format_str, "Max:", data_max))
   })
 }
 
