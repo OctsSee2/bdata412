@@ -15,17 +15,23 @@ library(ggplot2)
 library(scales)
 library(DT)
 
+library(readxl)       # read .xlsx
+library(data.table)   # fast filtering/grouping for large data
+
 # ---------------------------------------------------------------------------
 # 1. LOAD DATA
 # ---------------------------------------------------------------------------
-# Change this path to wherever your OEWS csv lives.
-# fread is much faster than read.csv for ~400k rows.
-DATA_PATH <- "oews_data.csv"
 
-oews <- fread(
+DATA_PATH  <- "data/oews_data.xlsx"
+SHEET_NAME <- NULL  
+
+# read_excel is fine for ~400k rows but is single-threaded and can take
+# 30-60+ seconds depending on machine. na = c(...) covers BLS's suppression
+# codes so they come in as real NA rather than text.
+oews_raw <- read_excel(
   DATA_PATH,
-  na.strings = c("", "NA", "*", "**", "#"),   # BLS uses these as missing-value codes
-  showProgress = FALSE
+  sheet = SHEET_NAME,
+  na = c("", "NA", "*", "**", "#")
 )
 
 # Define UI for application that draws a histogram
