@@ -37,43 +37,32 @@ oews_raw <- read_excel(
   na = c("", "NA", "*", "**", "#", "~")
 )
 
-# Define UI for application that draws a histogram
-ui <- fluidPage(
 
-    # Application title
-    titlePanel("Old Faithful Geyser Data"),
+# Convert to data.table for fast filtering/grouping downstream
+oews <- as.data.table(oews_raw)
 
-    # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
+# Standardize column names to lowercase (in case source file has mixed case)
+names(oews) <- tolower(names(oews))
 
-        # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("distPlot")
-        )
-    )
-)
+# Make sure key numeric columns are actually numeric (BLS files sometimes
+# store suppressed values as text like "*")
+num_cols <- c("tot_emp", "emp_prse", "jobs_1000", "loc_quotient", "pct_total",
+              "pct_rpt", "h_mean", "a_mean", "mean_prse",
+              "h_pct10", "h_pct25", "h_median", "h_pct75", "h_pct90",
+              "a_pct10", "a_pct25", "a_median", "a_pct75", "a_pct90")
+num_cols <- intersect(num_cols, names(oews))
+oews[, (num_cols) := lapply(.SD, as.numeric), .SDcols = num_cols]
 
-# Define server logic required to draw a histogram
-server <- function(input, output) {
-
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white',
-             xlab = 'Waiting time to next eruption (in mins)',
-             main = 'Histogram of waiting times')
-    })
+# annual / hourly are TRUE/blank flag columns -- convert from text to logical
+flag_cols <- intersect(c("annual", "hourly"), names(oews))
+if (length(flag_cols) > 0) {
+  oews[, (flag_cols) := lapply(.SD, function(x) toupper(x) == "TRUE"), .SDcols = flag_cols]
 }
 
-# Run the application 
-shinyApp(ui = ui, server = server)
+# Pre-compute choice lists once (fast dropdowns instead of scanning 400k rows
+# every render)
+state_choices    <- sort(unique(oews$area_title[oews$area_type == 2]))
+industry_choices <- sort(unique(oews$naics_title))
+ogroup_choices   <- sort(unique(oews$o_group))
+owncode_choices  <- sort(unique(oews$own_code))
+
