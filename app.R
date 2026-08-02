@@ -145,3 +145,123 @@ ui <- fluidPage(
   )
 )
 
+# ---------------------------------------------------------------------------
+# 3. SERVER
+# ---------------------------------------------------------------------------
+server <- function(input, output, session) {
+  
+  # Reactive: filtered subset based on sidebar inputs.
+  filtered_data <- reactive({
+    d <- oews
+    
+    if (input$state != "all") {
+      d <- d[d$area_title == input$state, ]
+    } else {
+      # default to national totals if no state chosen, to avoid double counting
+      d <- d[d$area_type == 1, ]
+    }
+    
+    if (input$industry != "all") {
+      d <- d[d$naics_title == input$industry, ]
+    }
+    
+    if (input$ogroup != "all") {
+      d <- d[d$o_group == input$ogroup, ]
+    }
+    
+    if (input$owncode != "all") {
+      d <- d[d$own_code == input$owncode, ]
+    }
+    
+    d
+  })
+  
+  output$row_count <- renderText({
+    paste0("Rows after filtering: ", format(nrow(filtered_data()), big.mark = ","))
+  })
+  
+  # --- Plot 1: Top N occupations by total employment -----------------------
+  output$empBarPlot <- renderPlot({
+    d <- filtered_data()
+    validate(need(nrow(d) > 0, "No data for this combination of filters."))
+    
+    top_occ <- d %>%
+      filter(!is.na(tot_emp)) %>%
+      arrange(desc(tot_emp)) %>%
+      distinct(occ_title, .keep_all = TRUE) %>%
+      slice_head(n = input$top_n)
+    
+    validate(need(nrow(top_occ) > 0, "No employment data available for this selection."))
+    
+    ggplot(top_occ, aes(x = reorder(occ_title, tot_emp), y = tot_emp)) +
+      geom_col(fill = "steelblue") +
+      coord_flip() +
+      scale_y_continuous(labels = comma) +
+      labs(
+        title = paste("Top", input$top_n, "Occupations by Total Employment"),
+        x = NULL,
+        y = "Total Employment"
+      ) +
+      theme_minimal(base_size = 13)
+  })
+  
+  # --- Plot 2: Wage distribution histogram ----------------------------------
+  output$wageHist <- renderPlot({
+    d <- filtered_data()
+    wage_col <- input$wage_type
+    x <- d[[wage_col]]
+    x <- x[!is.na(x)]
+    
+    validate(need(length(x) > 0, "No wage data available for this selection."))
+    
+    ggplot(data.frame(wage = x), aes(x = wage)) +
+      geom_histogram(bins = input$bins, fill = "darkorange", color = "white") +
+      scale_x_continuous(labels = comma) +
+      labs(
+        title = paste("Distribution of", names(which(
+          c("a_mean" = "Annual Mean", "a_median" = "Annual Median",
+            "h_mean" = "Hourly Mean", "h_median" = "Hourly Median") == wage_col
+        ))),
+        x = "Wage",
+        y = "Count of Occupations"
+      ) +
+      theme_minimal(base_size = 13)
+  })
+  
+  # --- Plot 3: Employment vs wage scatter -----------------------------------
+  output$scatterPlot <- renderPlot({
+    d <- filtered_data()
+    wage_col <- input$wage_type
+    
+    d2 <- d %>%
+      filter(!is.na(tot_emp), !is.na(.data[[wage_col]]))
+    
+    validate(need(nrow(d2) > 0, "No data available for this selection."))
+    
+    ggplot(d2, aes(x = .data[[wage_col]], y = tot_emp)) +
+      geom_point(alpha = 0.5, color = "purple") +
+      scale_x_continuous(labels = comma) +
+      scale_y_log10(labels = comma) +
+      labs(
+        title = "Employment vs. Wage (log scale on employment)",
+        x = paste(wage_col, "wage"),
+        y = "Total Employment (log scale)"
+      ) +
+      theme_minimal(base_size = 13)
+  })
+  
+  # --- Data table ------------------------------------------------------------
+  output$dataTable <- renderDT({
+    d <- filtered_data()
+    datatable(
+      d %>% select(area_title, naics_title, occ_title, o_group, own_code,
+                   tot_emp, h_mean, a_mean, a_median),
+      options = list(pageLength = 15, scrollX = TRUE)
+    )
+  })
+}
+
+# ---------------------------------------------------------------------------
+# 4. RUN
+# ---------------------------------------------------------------------------
+shinyApp(ui = ui, server = server)
