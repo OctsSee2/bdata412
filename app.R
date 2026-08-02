@@ -28,10 +28,13 @@ SHEET_NAME <- NULL
 # read_excel is fine for ~400k rows but is single-threaded and can take
 # 30-60+ seconds depending on machine. na = c(...) covers BLS's suppression
 # codes so they come in as real NA rather than text.
+
+#  col_types = "text" forces every column to be read as character,
 oews_raw <- read_excel(
   DATA_PATH,
   sheet = SHEET_NAME,
-  na = c("", "NA", "*", "**", "#")
+  col_types = "text",
+  na = c("", "NA", "*", "**", "#", "~")
 )
 
 # Define UI for application that draws a histogram
