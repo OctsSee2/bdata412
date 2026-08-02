@@ -1,51 +1,49 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    https://shiny.posit.co/
-#
-
 library(shiny)
 
-# Define UI for application that draws a histogram
+# some stuff to load the data from 2024-2025 (testing)
+employment_data <- read.csv("./all_data_M_2025.csv")
+
 ui <- fluidPage(
-
-    # Application title
-    titlePanel("Old Faithful Geyser Data"),
-
-    # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("distPlot")
-        )
-    )
+  titlePanel("Testing testing"),
+  tableOutput("head_of_table")
 )
 
-# Define server logic required to draw a histogram
 server <- function(input, output) {
-
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white',
-             xlab = 'Waiting time to next eruption (in mins)',
-             main = 'Histogram of waiting times')
-    })
+  output$head_of_table <- renderTable({
+    head(employment_data, n=10)
+  })
 }
 
-# Run the application 
+#ui <- fluidPage(
+#    titlePanel("Testing employment data from 2024-2025"),
+#
+#    # Sidebar with a slider input for number of bins 
+#    sidebarLayout(
+#        sidebarPanel(
+#            sliderInput("bins",
+#                        "Number of bins:",
+#                        min = 1,
+#                        max = 50,
+#                        value = 30)
+#        ),
+
+#        mainPanel(
+#           plotOutput("distPlot")
+#        )
+#    )
+#)
+
+#server <- function(input, output) {
+#    output$distPlot <- renderPlot({
+#        # generate bins based on input$bins from ui.R
+#        x    <- employment_data[, 2]
+#        bins <- seq(min(x), max(x), length.out = input$bins + 1)
+
+#        # draw the histogram with the specified number of bins
+#        hist(x, breaks = bins, col = 'darkgray', border = 'white',
+#             xlab = 'Something ????',
+#             main = 'Histogram of something ????')
+#    })
+#}
+
 shinyApp(ui = ui, server = server)
