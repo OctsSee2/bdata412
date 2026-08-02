@@ -42,7 +42,8 @@ ui <- fluidPage(
       )
     ),
     mainPanel(
-      plotOutput(outputId = "the_histogram_thing")
+      plotOutput(outputId = "the_histogram_thing"),
+      tableOutput(outputId = "the_debug_table")
     )
   )
 )
@@ -70,6 +71,17 @@ server <- function(input, output) {
         y = "Count"
       ) +
       theme_minimal()
+  })
+  
+  output$the_debug_table <- renderTable({
+    head_n <- 10
+    target_column_str <- input$choice_var
+    selected_data <- employment_data[[target_column_str]]
+    
+    data.frame(
+      Row_Index = 1:head_n,
+      Raw_Value = head(selected_data, n = head_n)
+    )
   })
 }
 
