@@ -7,7 +7,26 @@
 #    https://shiny.posit.co/
 #
 
+
 library(shiny)
+library(data.table)   # fast read/filter for large data
+library(dplyr)
+library(ggplot2)
+library(scales)
+library(DT)
+
+# ---------------------------------------------------------------------------
+# 1. LOAD DATA
+# ---------------------------------------------------------------------------
+# Change this path to wherever your OEWS csv lives.
+# fread is much faster than read.csv for ~400k rows.
+DATA_PATH <- "oews_data.csv"
+
+oews <- fread(
+  DATA_PATH,
+  na.strings = c("", "NA", "*", "**", "#"),   # BLS uses these as missing-value codes
+  showProgress = FALSE
+)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
