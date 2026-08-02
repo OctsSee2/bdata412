@@ -66,3 +66,82 @@ industry_choices <- sort(unique(oews$naics_title))
 ogroup_choices   <- sort(unique(oews$o_group))
 owncode_choices  <- sort(unique(oews$own_code))
 
+
+# ---------------------------------------------------------------------------
+# 2. UI
+# ---------------------------------------------------------------------------
+ui <- fluidPage(
+  titlePanel("OEWS Occupational Employment & Wage Explorer"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      width = 3,
+      
+      selectInput(
+        "state", "State / Area:",
+        choices = c("All (U.S. National)" = "all", state_choices),
+        selected = "all"
+      ),
+      
+      selectizeInput(
+        "industry", "Industry (NAICS):",
+        choices = c("All Industries" = "all", industry_choices),
+        selected = "all",
+        options = list(maxOptions = 2000)
+      ),
+      
+      selectInput(
+        "ogroup", "Occupation level:",
+        choices = c("All" = "all", ogroup_choices),
+        selected = "detailed"
+      ),
+      
+      selectInput(
+        "owncode", "Ownership type:",
+        choices = c("All" = "all", owncode_choices),
+        selected = "all"
+      ),
+      
+      radioButtons(
+        "wage_type", "Wage measure:",
+        choices = c("Annual mean" = "a_mean",
+                    "Annual median" = "a_median",
+                    "Hourly mean" = "h_mean",
+                    "Hourly median" = "h_median"),
+        selected = "a_mean"
+      ),
+      
+      sliderInput("top_n", "Number of occupations to show:",
+                  min = 5, max = 40, value = 15),
+      
+      hr(),
+      helpText(paste0("Full dataset: 413,528 rows. ",
+                      "Filters below narrow it before plotting for speed.")),
+      textOutput("row_count")
+    ),
+    
+    mainPanel(
+      width = 9,
+      tabsetPanel(
+        tabPanel(
+          "Top Occupations by Employment",
+          plotOutput("empBarPlot", height = "600px")
+        ),
+        tabPanel(
+          "Wage Distribution",
+          plotOutput("wageHist", height = "450px"),
+          sliderInput("bins", "Number of bins:", min = 5, max = 100, value = 40)
+        ),
+        tabPanel(
+          "Employment vs. Wage",
+          plotOutput("scatterPlot", height = "550px")
+        ),
+        tabPanel(
+          "Data Table",
+          DTOutput("dataTable")
+        )
+      )
+    )
+  )
+)
+
