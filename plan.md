@@ -4,7 +4,7 @@
  - With major shifts occurring in the US job market due to AI disruption, many job seekers may be left uninformed about the true state of various occupations across the US.
  - Our dashboard aims to allow for those individuals to research their own region's occupation/industry level data trends to see which ones are experiencing a boom, bust, or stagnation in terms of availability or pay.
  - The level of detail scales from national, to state specific, to city/metro-area specific levels to allow for very precise job statistics for any individual living in a populated area of the US.
- - This also allows for public policy officials or analysts to gain timescaled industry and occupational insights for data-driven decision making as it will allow for convenient access of region-bounded industry and occupation data.
+ - This also allows for public policy officials or analysts to gain industry and occupational insights for data-driven decision making as it will allow for convenient access of region-bounded industry and occupation data.
 
 # Stakeholders
 ## Primary
