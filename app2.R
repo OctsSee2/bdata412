@@ -5,9 +5,13 @@ library(sf)
 library(leaflet)
 library(viridis)
 
-employment_data <- read.csv("./all_data_M_2025.csv") %>%
-                    # ensure that FIPS and CBSA codes are strings, not integers
-                    mutate(AREA = trimws(as.character(AREA)))
+employment_data <- read.csv("./all_data_M_2025.csv", colClasses = c("AREA" = "character"))
+
+state_employment_data <- employment_data %>%
+                          filter(AREA_TYPE == 2)
+cbsa_employment_data <- employment_data %>%
+                          filter(AREA_TYPE == 4 | AREA_TYPE == 5)
+
 
 oews_state_shapes <- st_read("./shape-files/tl_2025_us_state.shp") %>%
                         st_transform(4326) %>%
@@ -22,11 +26,6 @@ oews_cbsa_shapes <- st_read("./shape-files/tl_2025_us_cbsa.shp") %>%
 #cbsa_joined_employment_data <- oews_cbsa_shapes %>%
 #                                  left_join(employment_data,
 #                                            by = c("CBSAFP" = "AREA"))
-
-get_numeric_filtered_df <- function(df_in, column_str_in) {
-  df_in[[column_str_in]] <- as.numeric(gsub(",", "", df_in[[column_str_in]]))
-  return(df_in[!is.na(df_in[[column_str_in]]), ])
-}
 
 get_named_vec_occupation_names <- function () {
   unique_occupations <- unique(employment_data[, c("OCC_TITLE", "OCC_CODE")])
@@ -60,13 +59,20 @@ ui <- fluidPage(
 server <- function(input, output) {
   target_column_str <- "A_MEAN"
 
-  get_cleaned_numeric_df <- reactive({
-    filtered_employment_data <- employment_data %>%
-                                  filter(OCC_CODE == input$occupation_type_choice)
+  get_cleaned_agged_df <- reactive({
+    filtered_employment_data <- state_employment_data %>%
+                                  filter(OCC_CODE == input$occupation_type_choice) %>%
+                                  mutate(!!target_column_str := as.numeric(gsub(",", "", .data[[target_column_str]]))) %>%
+                                  group_by(AREA) %>%
+                                  summarize(
+                                    !!target_column_str := mean(.data[[target_column_str]], na.rm = TRUE),
+                                    .groups = "drop"
+                                  )
+
     state_joined_employment_data <- oews_state_shapes %>%
                                       left_join(filtered_employment_data,
                                                 by = c("STATEFP" = "AREA"))
-    return(get_numeric_filtered_df(state_joined_employment_data, target_column_str))
+    return(state_joined_employment_data)
   })
   
   output$the_map <- renderLeaflet({
@@ -77,19 +83,18 @@ server <- function(input, output) {
   })
   
   observe({
-    cleaned_numeric_df <- get_cleaned_numeric_df()
-    print("######## WHAT ############")
-    print(summary(cleaned_numeric_df))
-    print("######## WHAT ############")
-    
+    cleaned_agged_df <- get_cleaned_agged_df()
+
+    #vals <- cleaned_agged_df[[target_column_str]]
     color_palette <- colorNumeric(
       palette = "viridis",
-      domain = cleaned_numeric_df[[target_column_str]],
+      domain = #if (all(is.na(vals))) c(0, 1) else vals,
+              cleaned_agged_df[[target_column_str]],
       na.color = "#ff0000"
     )
     
     leafletProxy(mapId = "the_map",
-                 data = cleaned_numeric_df) %>%
+                 data = cleaned_agged_df) %>%
       clearShapes() %>%
       clearControls() %>%
       addPolygons(
@@ -107,7 +112,7 @@ server <- function(input, output) {
       ) %>%
       addLegend(
         pal = color_palette,
-        values = cleaned_numeric_df[[target_column_str]],
+        values = cleaned_agged_df[[target_column_str]],
         opacity = 0.7,
         title = "Somethingsomethingsomething",
         position = "bottomright"
