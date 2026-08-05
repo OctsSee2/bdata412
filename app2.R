@@ -64,6 +64,7 @@ server <- function(input, output) {
                                   mutate(!!target_column_str := as.numeric(gsub(",", "", .data[[target_column_str]]))) %>%
                                   group_by(AREA) %>%
                                   summarize(
+                                    THE_COUNT = n(),
                                     !!target_column_str := switch(
                                       input$agg_type_choice,
                                       "Mean" = mean(.data[[target_column_str]], na.rm = TRUE),
@@ -115,7 +116,8 @@ server <- function(input, output) {
           fillOpacity = 0.9,
           bringToFront = TRUE
         ),
-        label = ~paste0(NAME, ": ", round(get(target_column_str), 2)),
+        label = ~paste0(NAME, ": ", round(get(target_column_str), 2), 
+                        ", N: ", get("THE_COUNT")),
         labelOptions = labelOptions(
           style = list("font-weight" = "normal",
                        "padding" = "3px 8px"),
