@@ -5,6 +5,9 @@ library(sf)
 library(leaflet)
 library(viridis)
 
+# TODO: make this map view only use occupation
+#       (find a way to group each detailed occupation by major, minor, and broad occupation groups)
+
 employment_data <- read.csv("./all_data_M_2025.csv", colClasses = c("AREA" = "character"))
 
 state_employment_data <- employment_data %>%
@@ -32,15 +35,36 @@ get_named_vec_occupation_names <- function () {
   return(setNames(unique_occupations$OCC_CODE, unique_occupations$OCC_TITLE))
 }
 
+get_named_vec_naics_names <- function () {
+  unique_naics <- unique(employment_data[, c("NAICS_TITLE", "NAICS")])
+  return(setNames(unique_naics$NAICS, unique_naics$NAICS_TITLE))
+}
+
 ui <- fluidPage(
     titlePanel("Choropleth testing"),
 
     sidebarLayout(
         sidebarPanel(
           selectInput(
-            inputId = "occupation_type_choice",
-            label = "Choose an Occupation Type",
-            choices = get_named_vec_occupation_names()
+            inputId = "occupation_detail_choice",
+            label = "Occupation detail",
+            choices = c("Industry", "Occupation")
+          ),
+          conditionalPanel(
+            condition = "input.occupation_detail_choice == 'Industry'",
+            selectInput(
+              inputId = "industry_type_choice",
+              label = "Choose an Industry Type",
+              choices = get_named_vec_naics_names()
+            )
+          ),
+          conditionalPanel(
+            condition = "input.occupation_detail_choice == 'Occupation'",
+            selectInput(
+              inputId = "occupation_type_choice",
+              label = "Choose an Occupation Type",
+              choices = get_named_vec_occupation_names()
+            )
           ),
           selectInput(
             inputId = "agg_type_choice",
@@ -59,8 +83,17 @@ server <- function(input, output) {
   target_column_str <- "A_MEAN"
 
   get_cleaned_agged_df <- reactive({
-    filtered_employment_data <- state_employment_data %>%
-                                  filter(OCC_CODE == input$occupation_type_choice) %>%
+    filtered_employment_data <- state_employment_data
+    
+    if (input$occupation_detail_choice == "Industry") {
+      filtered_employment_data <- filtered_employment_data %>%
+                                    filter(NAICS == input$industry_type_choice)
+    } else {
+      filtered_employment_data <- filtered_employment_data %>%
+                                    filter(OCC_CODE == input$occupation_type_choice)
+    }
+    
+    filtered_employment_data <- filtered_employment_data %>%
                                   mutate(!!target_column_str := as.numeric(gsub(",", "", .data[[target_column_str]]))) %>%
                                   group_by(AREA) %>%
                                   summarize(
@@ -92,11 +125,11 @@ server <- function(input, output) {
   observe({
     cleaned_agged_df <- get_cleaned_agged_df()
 
-    #vals <- cleaned_agged_df[[target_column_str]]
+    vals <- cleaned_agged_df[[target_column_str]]
     color_palette <- colorNumeric(
       palette = "viridis",
-      domain = #if (all(is.na(vals))) c(0, 1) else vals,
-              cleaned_agged_df[[target_column_str]],
+      domain = if (all(is.na(vals))) c(0, 1) else vals,
+              #cleaned_agged_df[[target_column_str]],
       na.color = "#ff0000"
     )
     

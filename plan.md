@@ -49,8 +49,24 @@
     - Annual wage median
 
 # Planned methodology
- - Chloropleth map of increasing LODs as zoom progress
-    - Color of each region on the map is determined by dropdown menus specifing target occupations or industries
- - Pop-up window or dedicated column for displaying detailed graphs of a region once it is clicked on
- - Sliders for adjusting reporting year
- - Dropdown menus for filtering by ownership type, industry, etc...
+ - Map occupation view:
+    - Dropdown menu for selecting the value type to graph with options:
+       - Hourly mean wage
+       - Annual mean wage
+       - Hourly median wage
+       - Annual median wage
+       - Total employment count <TODO: may change this later as the values are weird>
+    - Choropleth map with 2 LOD modes:
+       - State level
+       - CBSA level
+    - 2 modes for displaying values on map:
+       - By occupation group (major, minor, broad):
+          - Dropdown menu for selecting specific occupation group
+          - Clicking on a state or CBSA region displays a popup pane
+             - Displays a sorted bar graph of all values of the detailed occupations under the specified occupation group
+       - By detailed occupations:
+          - Dropdown menu for selecting specific detailed occupation
+          - Clicking on a state shows the exact value of that detailed occupation for that state or CBSA region
+    - Nation-wide industry view:
+       - Something something to do with seeing different industries and how the same occupations compare up between each one
+          - (Each occupation can belong to multiple industries)
