@@ -40,14 +40,13 @@ ui <- fluidPage(
           selectInput(
             inputId = "occupation_type_choice",
             label = "Choose an Occupation Type",
-            #choice = c("N/A" = "NA", get_named_vec_occupation_names())
-            choice = get_named_vec_occupation_names()
+            choices = get_named_vec_occupation_names()
           ),
-          sliderInput("bins",
-                      "Number of bins:",
-                      min = 1,
-                      max = 50,
-                      value = 30)
+          selectInput(
+            inputId = "agg_type_choice",
+            label = "Choose an aggregation type",
+            choices = c("Mean", "Median", "Max", "Min", "Test")
+          )
         ),
         mainPanel(
           leafletOutput(outputId = "the_map", 
@@ -65,7 +64,14 @@ server <- function(input, output) {
                                   mutate(!!target_column_str := as.numeric(gsub(",", "", .data[[target_column_str]]))) %>%
                                   group_by(AREA) %>%
                                   summarize(
-                                    !!target_column_str := mean(.data[[target_column_str]], na.rm = TRUE),
+                                    !!target_column_str := switch(
+                                      input$agg_type_choice,
+                                      "Mean" = mean(.data[[target_column_str]], na.rm = TRUE),
+                                      "Median" = median(.data[[target_column_str]], na.rm = TRUE),
+                                      "Max" = max(.data[[target_column_str]], na.rm = TRUE),
+                                      "Min" = min(.data[[target_column_str]], na.rm = TRUE),
+                                      "Test" = 1.0
+                                    ),
                                     .groups = "drop"
                                   )
 
