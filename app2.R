@@ -114,6 +114,13 @@ server <- function(input, output) {
           color = "#666",
           fillOpacity = 0.9,
           bringToFront = TRUE
+        ),
+        label = ~paste0(NAME, ": ", round(get(target_column_str), 2)),
+        labelOptions = labelOptions(
+          style = list("font-weight" = "normal",
+                       "padding" = "3px 8px"),
+          textSize = "13px",
+          direction = "auto"
         )
       ) %>%
       addLegend(
